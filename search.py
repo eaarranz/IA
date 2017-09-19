@@ -2,16 +2,16 @@
 #
 # search.py
 # ---------
-# Licensing Information:  You are free to use or extend these projects for 
-# educational purposes provided that (1) you do not distribute or publish 
-# solutions, (2) you retain this notice, and (3) you provide clear 
-# attribution to UC Berkeley, including a link to 
+# Licensing Information:  You are free to use or extend these projects for
+# educational purposes provided that (1) you do not distribute or publish
+# solutions, (2) you retain this notice, and (3) you provide clear
+# attribution to UC Berkeley, including a link to
 # http://inst.eecs.berkeley.edu/~cs188/pacman/pacman.html
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
-# The core projects and autograders were primarily created by John DeNero 
+# The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
-# Student side autograding was added by Brad Miller, Nick Hay, and 
+# Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
 
@@ -21,6 +21,7 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
+
 
 class SearchProblem:
     """
@@ -73,7 +74,43 @@ def tinyMazeSearch(problem):
     from game import Directions
     s = Directions.SOUTH
     w = Directions.WEST
-    return  [s, s, w, s, w, w, s, w]
+    return [s, s, w, s, w, w, s, w]
+
+
+def expand(frontera, closed, current_node, problem):
+    """
+    Returns the updated frontera and closed data strucutres updated with the childs
+    """
+    closed.add(current_node[0])
+    childs = problem.getSuccessors(current_node[0])
+
+    for child in childs:
+        if isinstance(frontera, util.PriorityQueue):
+            frontera.push((child[0], current_node[1] + [child[1]], current_node[2] + child[2]), current_node[2] + child[2])
+        else:
+            frontera.push((child[0], current_node[1] + [child[1]]))
+
+def commonSearch(frontera, problem):
+    """
+    Interchangable implementation of the search algorithm, based on the 
+    type of "frontera" it returns different results.
+    """
+    if isinstance(frontera, util.PriorityQueue):
+        frontera.push((problem.getStartState(), [], 0), 0)
+    else:
+        frontera.push((problem.getStartState(), []))
+
+    closed = set()
+    while frontera:
+        current_node = frontera.pop()
+
+        if problem.isGoalState(current_node[0]):
+            return current_node[1]
+        
+        if current_node[0] not in closed:
+            expand(frontera, closed, current_node, problem)
+
+    return []
 
 def depthFirstSearch(problem):
     """
@@ -89,18 +126,25 @@ def depthFirstSearch(problem):
     print "Is the start a goal?", problem.isGoalState(problem.getStartState())
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    frontera = util.Stack()
+    return commonSearch(frontera, problem)
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    frontera = util.Queue()
+    return commonSearch(frontera, problem)
+
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    
+    frontera = util.PriorityQueue()
+    return commonSearch(frontera, problem)
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -108,6 +152,7 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
+
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
