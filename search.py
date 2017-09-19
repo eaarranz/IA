@@ -96,8 +96,10 @@ def commonSearch(frontera, problem):
     type of "frontera" it returns different results.
     """
     if isinstance(frontera, util.PriorityQueue):
+        #(Node, path, accumulated_cost)
         frontera.push((problem.getStartState(), [], 0), 0)
     else:
+        #(Node, path)
         frontera.push((problem.getStartState(), []))
 
     closed = set()
@@ -132,7 +134,9 @@ def depthFirstSearch(problem):
 
 
 def breadthFirstSearch(problem):
-    """Search the shallowest nodes in the search tree first."""
+    """
+    Search the shallowest nodes in the search tree first.
+    """
 
     frontera = util.Queue()
     return commonSearch(frontera, problem)
@@ -141,7 +145,7 @@ def breadthFirstSearch(problem):
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    
+
     frontera = util.PriorityQueue()
     return commonSearch(frontera, problem)
 
