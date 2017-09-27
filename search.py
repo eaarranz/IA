@@ -77,42 +77,49 @@ def tinyMazeSearch(problem):
     return [s, s, w, s, w, w, s, w]
 
 
-def expand(frontera, closed, current_node, problem):
+def expand(frontera, closed, current_node, problem, heuristic):
     """
-    Returns the updated frontera and closed data strucutres updated with the childs
+    It expands the node and handles its successors
+    Returns the 'frontera' and 'closed' data strucutres updated with the childs
     """
     closed.add(current_node[0])
     childs = problem.getSuccessors(current_node[0])
-
     for child in childs:
         if isinstance(frontera, util.PriorityQueue):
-            frontera.push((child[0], current_node[1] + [child[1]], current_node[2] + child[2]), current_node[2] + child[2])
+            # In order to save memory we can recalculate the accum cost, this works well if the heuristic is O(1)
+            accumulated_cost = current_node[2] + child[2] if current_node[2] == 0 else (
+                current_node[2] - heuristic(current_node[0], problem)) + child[2]
+            node_cost = accumulated_cost + heuristic(child[0], problem)
+            #(Node, path, accumulated_cost)
+            frontera.push((child[0], current_node[1] +
+                           [child[1]], node_cost), node_cost)
         else:
+            #(Node, path)
             frontera.push((child[0], current_node[1] + [child[1]]))
 
-def commonSearch(frontera, problem):
+
+def commonSearch(frontera, problem, heuristic=lambda x, y: 0):
     """
     Interchangable implementation of the search algorithm, based on the 
     type of "frontera" it returns different results.
     """
     if isinstance(frontera, util.PriorityQueue):
         #(Node, path, accumulated_cost)
-        frontera.push((problem.getStartState(), [], 0), 0)
+        frontera.push(((problem.getStartState()), [], 0), 0)
     else:
         #(Node, path)
-        frontera.push((problem.getStartState(), []))
+        frontera.push(((problem.getStartState()), []))
 
     closed = set()
     while frontera:
         current_node = frontera.pop()
-
         if problem.isGoalState(current_node[0]):
             return current_node[1]
-        
         if current_node[0] not in closed:
-            expand(frontera, closed, current_node, problem)
+            expand(frontera, closed, current_node, problem, heuristic)
 
     return []
+
 
 def depthFirstSearch(problem):
     """
@@ -142,7 +149,6 @@ def breadthFirstSearch(problem):
     return commonSearch(frontera, problem)
 
 
-
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
 
@@ -160,8 +166,9 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    frontera = util.PriorityQueue()
+    return commonSearch(frontera, problem, heuristic)
 
 
 # Abbreviations
