@@ -77,7 +77,7 @@ def tinyMazeSearch(problem):
     return [s, s, w, s, w, w, s, w]
 
 
-def expand(frontera, closed, current_node, problem, heuristic):
+def expand(frontera, closed, current_node, problem, heuristic, costs=None):
     """
     It expands the node and handles its successors
     Returns the 'frontera' and 'closed' data strucutres updated with the childs
@@ -87,12 +87,11 @@ def expand(frontera, closed, current_node, problem, heuristic):
     for child in childs:
         if isinstance(frontera, util.PriorityQueue):
             # In order to save memory we can recalculate the accum cost, this works well if the heuristic is O(1)
-            accumulated_cost = current_node[2] + child[2] if current_node[2] == 0 else (
-                current_node[2] - heuristic(current_node[0], problem)) + child[2]
-            node_cost = accumulated_cost + heuristic(child[0], problem)
+            costs[child[0]] = costs[current_node[0]] + child[2]
+            node_cost = costs[child[0]] + heuristic(child[0], problem)
             #(Node, path, accumulated_cost)
             frontera.push((child[0], current_node[1] +
-                           [child[1]], node_cost), node_cost)
+                           [child[1]]), node_cost)
         else:
             #(Node, path)
             frontera.push((child[0], current_node[1] + [child[1]]))
@@ -102,10 +101,15 @@ def commonSearch(frontera, problem, heuristic=lambda x, y: 0):
     """
     Interchangable implementation of the search algorithm, based on the 
     type of "frontera" it returns different results.
+    It can take an heuristic as optional param.
     """
+    start_state = problem.getStartState()
+    costs = {}
+
     if isinstance(frontera, util.PriorityQueue):
         #(Node, path, accumulated_cost)
-        frontera.push(((problem.getStartState()), [], 0), 0)
+        costs[start_state] = 0
+        frontera.push(((start_state), []), costs[start_state])
     else:
         #(Node, path)
         frontera.push(((problem.getStartState()), []))
@@ -116,7 +120,7 @@ def commonSearch(frontera, problem, heuristic=lambda x, y: 0):
         if problem.isGoalState(current_node[0]):
             return current_node[1]
         if current_node[0] not in closed:
-            expand(frontera, closed, current_node, problem, heuristic)
+            expand(frontera, closed, current_node, problem, heuristic, costs)
 
     return []
 
