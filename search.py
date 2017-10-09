@@ -101,7 +101,7 @@ def commonSearch(frontera, problem, heuristic=lambda x, y: 0):
     """
     Interchangable implementation of the search algorithm, based on the 
     type of "frontera" it returns different results.
-    It can take an heuristic as optional param.
+    It can take an heuristic as optional param, if none is given it uses the provided lambda (null heuristic)
     """
     start_state = problem.getStartState()
     costs = {}

@@ -447,14 +447,14 @@ def farthestDot(originPoint, otherPoints):
 
     for point in otherPoints:
         cost = util.manhattanDistance(originPoint, point)
-        if cost > closestCost:
-            closestCost = cost
-            closestPoint = point
+        if cost > farthestDot:
+            farthestDot = cost
+            farthestPoint = point
 
-    if closestCost is 0:
-        return None
+    if farthestDot is 0:
+        return (None, 0)
     else:
-        return closestPoint
+        return (farthestPoint, farthestDot)
 
 
 def mazeDistance(origin, goal, gameState):
@@ -568,7 +568,8 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    # It solves the problem exapnding about 9300 nodes, it's really fast
+    # First Attempt:
+    # It solves the problem exapnding about 9300 nodes. 
     """
     foodList = foodGrid.asList()
     row, line = position
@@ -582,6 +583,10 @@ def foodHeuristic(state, problem):
     return some_test
     """
     # Let's try another implementation:
+    # We can find the closest dot with a relatively low compute cost, we asume that the it will be close to us
+    # So we can use the function mazeDistance to calculate the real distance to that point with also a relatively low cost.
+    # With that, we have a first heuristic.
+
     foodList = foodGrid.asList()
 
     if(not foodList):
@@ -592,11 +597,18 @@ def foodHeuristic(state, problem):
     closestFood = closestDot(position, foodList)
     realCost = mazeDistance(position, closestFood, problem.startingGameState)
 
-    # This approach returns about 7310 nodes expanded
+    # This approach returns about 7310 nodes expanded:
+    # We can add to the distance the remaining food, a state with less remaining food will
+    # Be considered closer to the solution that one with more food.
     # return realCost + len(foodList)
 
-    #Let's try to merge my first attempt with this
-    food_dis = [(util.manhattanDistance(closestFood, food)) for food in foodList]
+    # Let's try to merge my first attempt with this:
+    # At the first attempt I've managed to reduce the nodes not by using the remaining dots as the heuristic, 
+    # but using the max distance among all the other point to the dot, merging that approax to the previous one
+    # I've managed to expand 6656 nodes! Hurra!
+
+    food_dis = [(util.manhattanDistance(closestFood, food))
+                for food in foodList]
     maximum = max(food_dis) if food_dis else 0
 
     return realCost + maximum
