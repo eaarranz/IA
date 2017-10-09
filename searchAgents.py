@@ -406,8 +406,9 @@ def cornersHeuristic(state, problem):
     # These are the walls of the maze, as a Grid (game.py)
     walls = problem.walls
 
-    distances = [util.manhattanDistance(state[0], corner) for corner in corners if not state[1][corners.index(corner)]]
-    # We use the max distance 
+    distances = [util.manhattanDistance(
+        state[0], corner) for corner in corners if not state[1][corners.index(corner)]]
+    # We use the max distance
     return max(distances) if distances else 0
 
 
@@ -418,6 +419,58 @@ class AStarCornersAgent(SearchAgent):
         self.searchFunction = lambda prob: search.aStarSearch(
             prob, cornersHeuristic)
         self.searchType = CornersProblem
+
+
+def closestDot(originPoint, otherPoints):
+    """
+    It returns the closest point from a origin to one point of a given collection
+    """
+    closestCost = 9999999
+
+    for point in otherPoints:
+        cost = util.manhattanDistance(originPoint, point)
+        if cost < closestCost:
+            closestCost = cost
+            closestPoint = point
+
+    if closestCost is 9999999:
+        return None
+    else:
+        return closestPoint
+
+
+def farthestDot(originPoint, otherPoints):
+    """
+    It returns the farthest point from a origin to one point of a given collection
+    """
+    farthestDot = 0
+
+    for point in otherPoints:
+        cost = util.manhattanDistance(originPoint, point)
+        if cost > closestCost:
+            closestCost = cost
+            closestPoint = point
+
+    if closestCost is 0:
+        return None
+    else:
+        return closestPoint
+
+
+def mazeDistance(origin, goal, gameState):
+    """
+    We want to solve the problem of getting the distance between two points of the 
+    maze, it can be solved with a bfs search as we have done in the first questions.
+    """
+    walls = gameState.getWalls()
+    # Check if the point are walls, it raises an AssertionError exception if a wall is finded
+    assert not walls[origin[0]][origin[1]], 'origin is a wall' + str(origin)
+    assert not walls[goal[0]][goal[1]], 'goal is a wall' + str(goal)
+    # The distance between two points can be solved like the position search problem solved in the first question
+    # We disable the warnings and visualization of the problem
+    problem_to_solve = PositionSearchProblem(
+        gameState, start=origin, goal=goal, warn=False, visualize=False)
+    return len(search.bfs(problem_to_solve))
 
 
 class FoodSearchProblem:
@@ -472,6 +525,9 @@ class FoodSearchProblem:
             cost += 1
         return cost
 
+    def getGameState():
+        return self.startingGameState
+
 
 class AStarFoodSearchAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -482,8 +538,6 @@ class AStarFoodSearchAgent(SearchAgent):
         self.searchType = FoodSearchProblem
 
 
-def mazeDistance():
-    return 0
 def foodHeuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -514,7 +568,8 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-
+    # It solves the problem exapnding about 9300 nodes, it's really fast
+    """
     foodList = foodGrid.asList()
     row, line = position
     
@@ -525,6 +580,26 @@ def foodHeuristic(state, problem):
     some_test = sum(food_dis) - (util.manhattanDistance(problem.getStartState()[0], position))
 
     return some_test
+    """
+    # Let's try another implementation:
+    foodList = foodGrid.asList()
+
+    if(not foodList):
+        return 0
+
+    row, column = position
+
+    closestFood = closestDot(position, foodList)
+    realCost = mazeDistance(position, closestFood, problem.startingGameState)
+
+    # This approach returns about 7310 nodes expanded
+    # return realCost + len(foodList)
+
+    #Let's try to merge my first attempt with this
+    food_dis = [(util.manhattanDistance(closestFood, food)) for food in foodList]
+    maximum = max(food_dis) if food_dis else 0
+
+    return realCost + maximum
 
 
 class ClosestDotSearchAgent(SearchAgent):
